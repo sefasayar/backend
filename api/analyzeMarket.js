@@ -1,10 +1,10 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-// api/analyzeMarket.js
+// backend/api/analyzeMarket.js
 
 import { createClient } from '@supabase/supabase-js';
-// 'node-fetch' importunu kaldırdık
+import { RSI, MACD, SMA } from 'technicalindicators';
+import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Supabase bağlantısı
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -15,6 +15,15 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 const alphaVantageApiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
 export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'GET') {
         return res.status(405).json({ message: 'Only GET requests are allowed' });
     }
@@ -65,6 +74,12 @@ export default async function handler(req, res) {
 
             // Teknik göstergeleri hesaplama
             const closePrices = prices.map(price => price.close);
+
+            // Yeterli veri olup olmadığını kontrol edin
+            if (closePrices.length < 200) {
+                console.error(`Not enough data for ${symbol}`);
+                continue;
+            }
 
             // Hareketli Ortalamalar
             const ma50 = SMA.calculate({ period: 50, values: closePrices });
@@ -164,13 +179,13 @@ export default async function handler(req, res) {
 // Paketlere göre sembolleri getiren fonksiyonlar
 async function getSymbolsForPackage(packageName) {
     let symbols = [];
-    if (packageName === 'Forex + Hisse Senedi') {
+    if (packageName === 'Forex + Hisse Senedi Paketi') {
         const forexSymbols = getMostTradedForexSymbols();
         const stockSymbols = getMostTradedStockSymbols();
         symbols = forexSymbols.concat(stockSymbols);
-    } else if (packageName === 'Profesyonel Vadeli İşlemler') {
+    } else if (packageName === 'Profesyonel Vadeli İşlemler Paketi') {
         symbols = getMostTradedFuturesSymbols();
-    } else if (packageName === 'Kripto Özel') {
+    } else if (packageName === 'Kripto Özel Paketi') {
         symbols = getMostTradedCryptoSymbols();
     }
     return symbols;
