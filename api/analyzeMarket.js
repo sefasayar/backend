@@ -1,5 +1,23 @@
 // backend/api/analyzeMarket.js
 
+
+export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', 'https://frontend-sefas-projects-a0d672f7.vercel.app');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    // ... mevcut kodunuz ...
+}
+
+
+
+
+
 import { createClient } from '@supabase/supabase-js';
 import { RSI, MACD, SMA } from 'technicalindicators';
 import fetch from 'node-fetch';
